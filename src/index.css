@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --primary-orange: #F38B21;
+  --primary-blue: #387CB7;
+  --primary-dark-blue: #135381;
+  --brand-gradient: linear-gradient(108deg, #FC9B3B 21.56%, #6CA3D2 106.83%);
+  --blue-gradient: linear-gradient(108deg, #6CA3D2 21.56%, #135381 106.83%);
+  --orange-gradient: linear-gradient(108deg, #F58A20 21.56%, #FFB067 106.83%);
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Custom scrollbars for clean mobile feel */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+

@@ -1,0 +1,6 @@
+{
+  "name": "BinGO! - Campus Food & Order Buddy",
+  "description": "Smart university canteen food ordering and peer-to-peer Order Buddy campus delivery service.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
