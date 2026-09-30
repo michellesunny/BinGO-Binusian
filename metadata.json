@@ -1,6 +1,7 @@
 {
-  "name": "BinGO! - Campus Food & Order Buddy",
-  "description": "Smart university canteen food ordering and peer-to-peer Order Buddy campus delivery service.",
+  "name": "BinGO! E-Canteen",
+  "description": "Smart e-canteen operations and pre-order management app for school and campus vendors, featuring real-time kitchen queue, operational calendar, and buddy ordering.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
+

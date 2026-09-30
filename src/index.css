@@ -1,28 +1,48 @@
 @import "tailwindcss";
 
-:root {
-  --primary-orange: #F38B21;
-  --primary-blue: #387CB7;
-  --primary-dark-blue: #135381;
-  --brand-gradient: linear-gradient(108deg, #FC9B3B 21.56%, #6CA3D2 106.83%);
-  --blue-gradient: linear-gradient(108deg, #6CA3D2 21.56%, #135381 106.83%);
-  --orange-gradient: linear-gradient(108deg, #F58A20 21.56%, #FFB067 106.83%);
-  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  
+  --color-bingo-orange: #f97316;
+  --color-bingo-amber: #f59e0b;
+  --color-bingo-blue: #2563eb;
+  --color-bingo-navy: #1e3a8a;
+  --color-bingo-dark: #0f172a;
 }
 
-/* Custom scrollbars for clean mobile feel */
+@layer base {
+  *, ::before, ::after {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    letter-spacing: -0.011em;
+  }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Custom subtle scrollbar */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.12);
+  background: rgba(148, 163, 184, 0.4);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(100, 116, 139, 0.6);
 }
 
+/* Hide scrollbar on specific elements */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

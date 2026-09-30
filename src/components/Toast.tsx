@@ -42,7 +42,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
         <button
           type="button"
           onClick={onDismiss}
-          className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
           aria-label="Tutup Notifikasi"
         >
           <X className="w-3.5 h-3.5" />
