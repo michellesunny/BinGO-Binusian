@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { MOCK_CALENDAR_EVENTS } from '../data/mockData';
-import { CalendarEvent } from '../types';
 import { X, Calendar as CalendarIcon, ChevronLeft, ChevronRight, AlertCircle, Clock } from 'lucide-react';
 
 interface CalendarModalProps {
@@ -24,10 +23,10 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose })
   const selectedEvent = getEventForDay(selectedDay);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn select-none">
-      <div className="relative w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-100 animate-slideUp">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fadeIn select-none overflow-hidden">
+      <div className="relative w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-100 animate-slideUp flex flex-col max-h-[82vh] my-auto">
         {/* Header */}
-        <div className="px-5 py-4 bg-gradient-to-r from-[#135381] to-[#387CB7] text-white flex items-center justify-between">
+        <div className="px-5 py-4 bg-gradient-to-r from-[#135381] to-[#387CB7] text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <CalendarIcon className="w-5 h-5 text-amber-300" />
             <h2 className="text-base font-extrabold tracking-tight">
@@ -45,7 +44,7 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose })
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+        <div className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1 min-h-0 overscroll-contain">
           {/* Month selector */}
           <div className="flex items-center justify-between px-2">
             <span className="text-sm font-extrabold text-slate-900">
@@ -179,7 +178,7 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose })
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-100">
+        <div className="p-4 bg-slate-50 border-t border-slate-100 shrink-0">
           <button
             type="button"
             onClick={onClose}

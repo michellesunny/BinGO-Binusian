@@ -4,15 +4,16 @@ import { Wifi, Battery } from 'lucide-react';
 interface StatusBarProps {
   time?: string;
   theme?: 'dark' | 'light';
+  className?: string;
 }
 
-export const StatusBar: React.FC<StatusBarProps> = ({ time = '9:41', theme = 'dark' }) => {
+export const StatusBar: React.FC<StatusBarProps> = ({ time = '9:41', theme = 'dark', className = '' }) => {
   const isDark = theme === 'dark';
 
   return (
     <div className={`w-full px-7 pt-3 pb-2 flex items-center justify-between text-xs select-none transition-colors ${
       isDark ? 'text-slate-900' : 'text-white'
-    }`}>
+    } ${className}`}>
       <span className="font-semibold tracking-tight text-sm tabular-nums">{time}</span>
 
       {/* Dynamic island / notch aesthetic */}

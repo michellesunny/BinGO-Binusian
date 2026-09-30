@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StatusBar } from './StatusBar';
 import { CartItem, Buddy, PeerRequest, Order } from '../types';
 import {
@@ -16,17 +16,14 @@ import {
   Check,
   Info,
   ChevronDown,
-  Sparkles,
-  ShieldCheck,
-  CreditCard,
-  Plus,
 } from 'lucide-react';
 
 interface CheckoutScreenProps {
   cart: CartItem[];
-  user: { name: string; nim: string; campus: string };
+  user: { name: string; nim: string; campus: string; role?: 'pemesan' | 'buddy' };
   onGoBack: () => void;
   onConfirmOrder: (newOrder: Order) => void;
+  incomingPeerRequests?: PeerRequest[];
 }
 
 export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
@@ -34,21 +31,45 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
   user,
   onGoBack,
   onConfirmOrder,
+  incomingPeerRequests,
 }) => {
   const [selectedSlot, setSelectedSlot] = useState<string>('09:00 - 09:10 WIB');
   const [showSlotDropdown, setShowSlotDropdown] = useState(false);
 
-  // Buddy toggle & modes
+  // Buddy toggle & modes: defaults according to user profile
   const [isBuddyEnabled, setIsBuddyEnabled] = useState(true);
-  const [buddyMode, setBuddyMode] = useState<'ask' | 'be'>('ask');
+  const [buddyMode, setBuddyMode] = useState<'ask' | 'be'>(user.role === 'buddy' ? 'be' : 'ask');
 
   // "Ask a Buddy" selections
   const [deliveryLocation, setDeliveryLocation] = useState<string>('Atrium Lt. 1');
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [selectedBuddy, setSelectedBuddy] = useState<Buddy>(MOCK_BUDDIES[0]);
 
-  // "Be a Buddy" peer requests
-  const [peerRequests, setPeerRequests] = useState<PeerRequest[]>(MOCK_PEER_REQUESTS);
+  // "Be a Buddy" current location and incoming requests
+  const [currentLocation, setCurrentLocation] = useState<string>('Atrium Lt. 1');
+  const [showCurrentLocationDropdown, setShowCurrentLocationDropdown] = useState(false);
+  const [peerRequests] = useState<PeerRequest[]>(() => {
+    if (incomingPeerRequests && incomingPeerRequests.length > 0) {
+      return [...incomingPeerRequests, ...MOCK_PEER_REQUESTS.filter((m) => !incomingPeerRequests.some((i) => i.studentName === m.studentName))].slice(0, 4);
+    }
+    return MOCK_PEER_REQUESTS;
+  });
+
+  // Countdown timer for Be a Buddy waiting pool (5 minutes = 300 seconds)
+  const [secondsRemaining, setSecondsRemaining] = useState<number>(300);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsRemaining((prev) => (prev > 0 ? prev - 1 : 300));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatCountdown = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
 
   // Item custom note
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({
@@ -59,19 +80,10 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
   const platformFee = Math.round(cartSubtotal * 0.05);
   const buddyFee = isBuddyEnabled && buddyMode === 'ask' ? 2000 : 0;
 
-  // Earnings if user is "Be a Buddy"
-  const buddyEarnings =
-    isBuddyEnabled && buddyMode === 'be'
-      ? peerRequests.filter((r) => r.selected).reduce((sum, r) => sum + r.fee, 0)
-      : 0;
+  // Earnings if user is "Be a Buddy": 2.000 setiap 1 kali pengantaran (bukan per orang)
+  const buddyEarnings = isBuddyEnabled && buddyMode === 'be' ? 2000 : 0;
 
   const totalPayment = cartSubtotal + platformFee + buddyFee;
-
-  const togglePeerRequest = (id: string) => {
-    setPeerRequests((prev) =>
-      prev.map((req) => (req.id === id ? { ...req, selected: !req.selected } : req))
-    );
-  };
 
   const handleCheckout = () => {
     const newOrder: Order = {
@@ -88,11 +100,15 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
       total: totalPayment,
       pickupSlot: selectedSlot.replace(' WIB', ''),
       isBuddyEnabled: isBuddyEnabled,
+      isBuddyOrder: isBuddyEnabled && buddyMode === 'be',
       buddyMode: isBuddyEnabled ? buddyMode : undefined,
       buddy: isBuddyEnabled && buddyMode === 'ask' ? selectedBuddy : undefined,
+      peerRequests: isBuddyEnabled && buddyMode === 'be' ? peerRequests : undefined,
+      buddyEarnings: isBuddyEnabled && buddyMode === 'be' ? 2000 : 0,
       pickupLocation: 'Kantin Utama, Lt. 1',
-      dropLocation: isBuddyEnabled && buddyMode === 'ask' ? deliveryLocation : undefined,
+      dropLocation: isBuddyEnabled && buddyMode === 'ask' ? deliveryLocation : (isBuddyEnabled && buddyMode === 'be' ? currentLocation : undefined),
       status: 'created',
+      verificationCode: String(Math.floor(1000 + Math.random() * 9000)),
       date: new Date().toLocaleDateString('id-ID'),
       timeline: [
         { status: 'Pesanan dibuat', time: 'Baru saja', done: true, active: true },
@@ -112,82 +128,42 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
 
   return (
     <div className="relative flex-1 flex flex-col h-full bg-slate-50 text-slate-900 select-none overflow-hidden">
-      <StatusBar theme="dark" />
-
-      {/* Header */}
-      <div className="px-5 py-3 bg-white border-b border-slate-100 flex items-center justify-between shadow-2xs">
-        <button
-          type="button"
-          onClick={onGoBack}
-          className="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-          aria-label="Kembali"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-base font-extrabold text-slate-900 tracking-tight">
-          Pesanan Saya
-        </h1>
-        <div className="w-10" />
-      </div>
+      {/* Sticky Header with white background covering StatusBar */}
+      <header className="sticky top-0 z-30 bg-white border-b border-slate-100 shadow-2xs shrink-0">
+        <StatusBar theme="dark" />
+        <div className="px-5 pt-1.5 pb-3 flex items-center justify-between min-h-[58px]">
+          <button
+            type="button"
+            onClick={onGoBack}
+            className="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer -ml-2"
+            aria-label="Kembali"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-base font-extrabold text-slate-900 tracking-tight">
+            Pesanan Saya
+          </h1>
+          <div className="w-8" />
+        </div>
+      </header>
 
       {/* Scrollable Form Body */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 pb-28">
-        {/* Ordered items breakdown */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-3">
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            Menu Dipesan
-          </div>
-
-          {cart.map((item) => (
-            <div key={item.menuItem.id} className="border-b border-slate-100 pb-3 last:border-b-0 last:pb-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-md bg-orange-100 text-[#F38B21] flex items-center justify-center text-xs font-bold">
-                    {item.quantity}x
-                  </span>
-                  <span className="text-xs font-bold text-slate-900">
-                    {item.menuItem.name}
-                  </span>
-                </div>
-                <span className="text-xs font-bold text-slate-900 tabular-nums">
-                  Rp {(item.menuItem.price * item.quantity).toLocaleString('id-ID')}
-                </span>
-              </div>
-
-              {/* Notes Input */}
-              <div className="mt-2">
-                <input
-                  type="text"
-                  placeholder="Notes (optional) - Example : tanpa sambal"
-                  value={itemNotes[item.menuItem.id] || ''}
-                  onChange={(e) =>
-                    setItemNotes({ ...itemNotes, [item.menuItem.id]: e.target.value })
-                  }
-                  className="w-full text-[11px] px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50/70 text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#F38B21] focus:bg-white transition-all"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Slot Waktu Pengambilan (Figma: Pilih Slot Waktu Pengambilan) */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs">
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-[#F38B21]" />
-              <span>Pilih Slot Waktu Pengambilan</span>
-            </label>
-            <span className="text-[10px] text-slate-400">10 menit per slot</span>
-          </div>
+      <div className="flex-1 overflow-y-auto min-h-0 px-5 py-4 space-y-4 pb-28">
+        {/* Pilih Slot Waktu Pengambilan (Matches Wireframe in image.png) */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-slate-700" />
+            <span>Pilih Slot Waktu Pengambilan</span>
+          </label>
 
           <div className="relative">
             <button
               type="button"
               onClick={() => setShowSlotDropdown(!showSlotDropdown)}
-              className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex items-center justify-between text-xs font-semibold text-slate-800 hover:border-[#F38B21] transition-all cursor-pointer"
+              className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between text-xs font-medium text-slate-700 hover:border-slate-400 transition-all cursor-pointer shadow-2xs"
             >
-              <span>{selectedSlot}</span>
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showSlotDropdown ? 'rotate-180' : ''}`} />
+              <span className="text-slate-500">{selectedSlot || 'Pilih rentang waktu ambil pesanan'}</span>
+              <div className="w-5 h-2.5 rounded-full bg-slate-300" />
             </button>
 
             {showSlotDropdown && (
@@ -213,32 +189,25 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
           </div>
         </div>
 
-        {/* Feature: ORDER BUDDY (Figma Frames: 43:2045, 88:1104, 88:1239) */}
-        <div className="bg-white rounded-3xl p-4 border border-orange-200/90 shadow-sm relative overflow-hidden">
+        {/* Feature: BUDDY FEATURE (Matches image.png) */}
+        <div className="space-y-3 pt-1">
           {/* Header & Toggle */}
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-orange-100 text-[#F38B21] flex items-center justify-center">
-                <Users className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-xs font-extrabold text-slate-900 leading-tight">
-                  Aktifkan fitur Buddy
-                </h3>
-                <p className="text-[10px] text-slate-500">
-                  Titip pesan antar sesama mahasiswa BINUS
-                </p>
-              </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-sm font-bold text-slate-900">
+                Aktifkan fitur Buddy
+              </h3>
+              <Info className="w-4 h-4 text-slate-400 cursor-pointer" />
             </div>
 
-            {/* Toggle switch (Figma: _Toggle base) */}
+            {/* iOS style Toggle Switch */}
             <button
               type="button"
               role="switch"
               aria-checked={isBuddyEnabled}
               onClick={() => setIsBuddyEnabled(!isBuddyEnabled)}
               className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer ${
-                isBuddyEnabled ? 'bg-[#F38B21]' : 'bg-slate-300'
+                isBuddyEnabled ? 'bg-[#5B7BF5]' : 'bg-slate-300'
               }`}
             >
               <div
@@ -250,34 +219,130 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
           </div>
 
           {isBuddyEnabled && (
-            <div className="pt-3 space-y-3 animate-fadeIn">
-              {/* Tabs: Ask a Buddy vs Be a Buddy */}
-              <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setBuddyMode('ask')}
-                  className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    buddyMode === 'ask'
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-900'
-                  }`}
-                >
-                  Ask a Buddy
-                </button>
+            <div className="space-y-3">
+              {/* Tab Navigation: Be a Buddy vs Ask a Buddy (Matches image.png) */}
+              <div className="flex border-b border-slate-200">
                 <button
                   type="button"
                   onClick={() => setBuddyMode('be')}
-                  className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 py-2 text-xs font-bold text-center transition-all cursor-pointer ${
                     buddyMode === 'be'
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-900'
+                      ? 'text-slate-900 border-b-2 border-blue-600'
+                      : 'text-slate-400 hover:text-slate-700'
                   }`}
                 >
                   Be a Buddy
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setBuddyMode('ask')}
+                  className={`flex-1 py-2 text-xs font-bold text-center transition-all cursor-pointer ${
+                    buddyMode === 'ask'
+                      ? 'text-slate-900 border-b-2 border-blue-600'
+                      : 'text-slate-400 hover:text-slate-700'
+                  }`}
+                >
+                  Ask a Buddy
+                </button>
               </div>
 
-              {/* MODE 1: ASK A BUDDY */}
+              {/* MODE 1: BE A BUDDY (Matches image.png layout) */}
+              {buddyMode === 'be' && (
+                <div className="space-y-3.5">
+                  {/* Location Selector: "Pilih lokasimu saat ini" */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-medium text-slate-700 whitespace-nowrap">
+                      Pilih lokasimu saat ini
+                    </span>
+                    <div className="relative flex-1 max-w-[200px]">
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentLocationDropdown(!showCurrentLocationDropdown)}
+                        className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white flex items-center justify-between text-xs text-slate-800 hover:border-slate-400 transition-all cursor-pointer"
+                      >
+                        <span className="truncate">{currentLocation}</span>
+                        <div className="w-4 h-2 rounded-full bg-slate-300 shrink-0 ml-1" />
+                      </button>
+
+                      {showCurrentLocationDropdown && (
+                        <div className="absolute top-9 right-0 w-48 bg-white rounded-xl shadow-lg border border-slate-200 z-40 py-1 divide-y divide-slate-100">
+                          {CAMPUS_LOCATIONS.map((loc) => (
+                            <button
+                              key={loc}
+                              type="button"
+                              onClick={() => {
+                                setCurrentLocation(loc);
+                                setShowCurrentLocationDropdown(false);
+                              }}
+                              className={`w-full px-3 py-2 text-left text-xs hover:bg-orange-50 transition-colors flex items-center justify-between cursor-pointer ${
+                                currentLocation === loc ? 'text-[#F38B21] font-bold bg-orange-50/50' : 'text-slate-700'
+                              }`}
+                            >
+                              <span>{loc}</span>
+                              {currentLocation === loc && <Check className="w-3.5 h-3.5 text-[#F38B21]" />}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Main Waiting Card (Matches image.png) */}
+                  <div className="bg-[#F8F9FA] rounded-[32px] p-8 border border-slate-200/50 min-h-[300px] flex flex-col items-center justify-between text-center shadow-xs">
+                    <div className="my-auto flex flex-col items-center">
+                      <h4 className="text-base font-bold text-slate-900 tracking-tight">
+                        Menunggu pesanan...
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-1 mb-6 font-normal">
+                        maksimal 4 orang
+                      </p>
+
+                      {/* Row of circular student avatars (Matches image.png with 4 avatars) */}
+                      <div className="flex items-center justify-center -space-x-1.5">
+                        {peerRequests.slice(0, 4).map((peer) => (
+                          <div
+                            key={peer.id}
+                            className="relative w-11 h-11 rounded-full overflow-hidden border-2 border-white shadow-sm ring-1 ring-slate-200/60 bg-slate-100"
+                            title={`${peer.studentName} • ${peer.dropLocation}`}
+                          >
+                            <img
+                              src={peer.avatar}
+                              alt={peer.studentName}
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-4 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>{peerRequests.length} orang menitip padamu</span>
+                      </div>
+                    </div>
+
+                    {/* Countdown text at bottom */}
+                    <div className="text-xs text-slate-400 font-medium tracking-wide">
+                      tersisa 5 menit ({formatCountdown(secondsRemaining)})
+                    </div>
+                  </div>
+
+                  {/* Note Komisi Tambahan: Rp 2.000 setiap 1 kali pengantaran (bukan per orang) */}
+                  <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-xs">
+                    <div className="flex items-center justify-between font-bold text-emerald-900">
+                      <span>Komisi Tambahanmu</span>
+                      <span className="text-sm font-extrabold text-emerald-700 tabular-nums">
+                        +Rp 2.000
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-emerald-700 mt-1 leading-relaxed">
+                      Kamu akan mendapatkan komisi Rp 2.000 setiap 1 kali pengantaran (maksimal 4 orang 1 kloter).
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* MODE 2: ASK A BUDDY */}
               {buddyMode === 'ask' && (
                 <div className="space-y-3">
                   {/* Delivery Location dropdown */}
@@ -289,7 +354,7 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
                       <button
                         type="button"
                         onClick={() => setShowLocationDropdown(!showLocationDropdown)}
-                        className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50/50 flex items-center justify-between text-xs font-medium text-slate-800 hover:border-[#F38B21] transition-all cursor-pointer"
+                        className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white flex items-center justify-between text-xs font-medium text-slate-800 hover:border-[#F38B21] transition-all cursor-pointer shadow-2xs"
                       >
                         <span className="flex items-center gap-1.5">
                           <MapPin className="w-3.5 h-3.5 text-[#F38B21]" />
@@ -321,7 +386,7 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
                     </div>
                   </div>
 
-                  {/* List of Available Buddies (Figma Frame 88:1104: Valencia, Leon W.) */}
+                  {/* List of Available Buddies */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-[11px] font-bold text-slate-700">
@@ -399,86 +464,12 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
                     </div>
                   </div>
 
-                  {/* Buddy Notice */}
-                  <div className="p-2.5 rounded-xl bg-orange-50/80 border border-orange-200/50 flex items-start gap-2 text-[11px] text-slate-600">
-                    <Info className="w-4 h-4 text-[#F38B21] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-slate-800">
-                        Note: Biaya layanan Buddy adalah Rp 2.000/orang.
-                      </p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">
-                        Menunggu pesanan... tersisa 5 menit, maksimal 4 orang dalam 1 kloter pengantaran.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* MODE 2: BE A BUDDY (Earn commission) */}
-              {buddyMode === 'be' && (
-                <div className="space-y-3">
-                  <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-200 text-xs">
-                    <div className="flex items-center justify-between font-bold text-emerald-900">
-                      <span>Komisi Tambahanmu</span>
-                      <span className="text-sm font-extrabold text-emerald-700 tabular-nums">
-                        +Rp {buddyEarnings.toLocaleString('id-ID')}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-emerald-700 mt-1">
-                      Kamu sedang menuju ke kantin? Bantu bawa pesanan temanmu sekalian jalan untuk dapat tip Rp 2.000 per orang!
+                  {/* Ask a Buddy Note requested: "Maksimal 4 orang 1 kloter pengantaran" */}
+                  <div className="p-2.5 rounded-xl bg-orange-50/80 border border-orange-200/50 flex items-center gap-2 text-xs text-slate-700">
+                    <Info className="w-4 h-4 text-[#F38B21] shrink-0" />
+                    <p className="font-semibold text-slate-800">
+                      Maksimal 4 orang 1 kloter pengantaran
                     </p>
-                  </div>
-
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-700 block mb-1.5">
-                      Permintaan Titipan Teman Kampus (Frame 5161)
-                    </span>
-
-                    <div className="space-y-2">
-                      {peerRequests.map((req) => (
-                        <div
-                          key={req.id}
-                          onClick={() => togglePeerRequest(req.id)}
-                          className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                            req.selected
-                              ? 'border-emerald-500 bg-emerald-50/30 shadow-xs'
-                              : 'border-slate-200 bg-white hover:border-slate-300'
-                          }`}
-                        >
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-slate-900">
-                                {req.studentName}
-                              </span>
-                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">
-                                Antar ke: {req.dropLocation}
-                              </span>
-                            </div>
-                            <div className="text-[11px] text-slate-500 mt-1">
-                              Rangkuman Pesanan:{' '}
-                              <span className="font-semibold text-slate-700">
-                                {req.items.map((i) => `${i.name} (x${i.quantity})`).join(', ')}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-extrabold text-emerald-600 tabular-nums">
-                              +Rp {req.fee.toLocaleString('id-ID')}
-                            </span>
-                            <div
-                              className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${
-                                req.selected
-                                  ? 'border-emerald-600 bg-emerald-600 text-white'
-                                  : 'border-slate-300 bg-white'
-                              }`}
-                            >
-                              {req.selected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </div>
               )}
@@ -486,7 +477,45 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
           )}
         </div>
 
-        {/* Total Payment Breakdown (Figma Frame 43:1380) */}
+        {/* Ordered items breakdown */}
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-3">
+          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            Menu Dipesan
+          </div>
+
+          {cart.map((item) => (
+            <div key={item.menuItem.id} className="border-b border-slate-100 pb-3 last:border-b-0 last:pb-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-md bg-orange-100 text-[#F38B21] flex items-center justify-center text-xs font-bold">
+                    {item.quantity}x
+                  </span>
+                  <span className="text-xs font-bold text-slate-900">
+                    {item.menuItem.name}
+                  </span>
+                </div>
+                <span className="text-xs font-bold text-slate-900 tabular-nums">
+                  Rp {(item.menuItem.price * item.quantity).toLocaleString('id-ID')}
+                </span>
+              </div>
+
+              {/* Notes Input */}
+              <div className="mt-2">
+                <input
+                  type="text"
+                  placeholder="Notes (optional) - Contoh: tanpa sambal"
+                  value={itemNotes[item.menuItem.id] || ''}
+                  onChange={(e) =>
+                    setItemNotes({ ...itemNotes, [item.menuItem.id]: e.target.value })
+                  }
+                  className="w-full text-[11px] px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50/70 text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#F38B21] focus:bg-white transition-all"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Total Payment Breakdown */}
         <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-2 text-xs">
           <h3 className="font-bold text-slate-900 mb-2">Total Payment</h3>
 
@@ -516,30 +545,44 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
             </div>
           )}
 
-          <div className="pt-2 border-t border-slate-100 flex justify-between items-baseline">
-            <span className="font-bold text-slate-900 text-sm">Total harga</span>
-            <span className="text-base font-extrabold text-[#F38B21] tabular-nums">
+          {isBuddyEnabled && buddyMode === 'be' && (
+            <div className="flex justify-between text-emerald-700 font-semibold pt-1 border-t border-slate-100">
+              <span>Potensi Komisi Tambahan Buddy</span>
+              <span className="tabular-nums">+Rp 2.000</span>
+            </div>
+          )}
+
+          <div className="border-t border-slate-100 pt-2 flex justify-between font-extrabold text-sm text-slate-900">
+            <span>Total Pembayaran</span>
+            <span className="text-[#F38B21] tabular-nums">
               Rp {totalPayment.toLocaleString('id-ID')}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Sticky Bottom Checkout Action */}
-      <div className="absolute bottom-4 left-4 right-4 z-30 animate-slideUp">
-        <button
-          type="button"
-          onClick={handleCheckout}
-          className="w-full h-12 rounded-2xl bg-gradient-to-r from-[#F38B21] to-[#FC9B3B] text-white font-bold text-sm shadow-xl shadow-orange-500/25 active:scale-98 transition-all cursor-pointer flex items-center justify-between px-5 hover:brightness-105"
-        >
-          <div className="flex items-center gap-2">
-            <CreditCard className="w-4 h-4" />
-            <span>Konfirmasi & Bayar</span>
+      {/* Floating Bottom Bar (Matches image.png: 1 item | Rp 12.600 >>> [Checkout]) */}
+      <div className="sticky bottom-2 left-0 right-0 px-4 py-2 z-30 shrink-0">
+        <div className="bg-gradient-to-r from-[#F5A623] to-[#E68A00] rounded-2xl px-5 py-3 shadow-lg flex items-center justify-between text-white border border-amber-300/40">
+          <div>
+            <span className="text-[11px] text-white/90 block font-medium leading-tight">
+              {cart.reduce((sum, item) => sum + item.quantity, 0)} item
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-base font-black tracking-tight">
+                Rp {totalPayment.toLocaleString('id-ID')}
+              </span>
+              <span className="text-xs font-bold text-white/80 tracking-widest">&gt;&gt;&gt;</span>
+            </div>
           </div>
-          <span className="text-base font-black tabular-nums">
-            Rp {totalPayment.toLocaleString('id-ID')}
-          </span>
-        </button>
+          <button
+            type="button"
+            onClick={handleCheckout}
+            className="px-6 py-2.5 rounded-xl bg-white text-slate-900 font-extrabold text-xs shadow-md hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+          >
+            Checkout
+          </button>
+        </div>
       </div>
     </div>
   );

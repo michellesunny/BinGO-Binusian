@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StatusBar } from './StatusBar';
 import { Vendor, MenuItem, CartItem } from '../types';
+import { VENDOR_PROFILE } from '../data/mockData';
 import {
   ArrowLeft,
   Search,
@@ -12,6 +13,7 @@ import {
   ShoppingBag,
   Star,
   MapPin,
+  Calendar as CalendarIcon,
 } from 'lucide-react';
 
 interface FoodListScreenProps {
@@ -21,6 +23,7 @@ interface FoodListScreenProps {
   onGoBack: () => void;
   onProceedToOrder: () => void;
   onOpenFeedback: () => void;
+  onOpenCalendar?: () => void;
 }
 
 export const FoodListScreen: React.FC<FoodListScreenProps> = ({
@@ -30,6 +33,7 @@ export const FoodListScreen: React.FC<FoodListScreenProps> = ({
   onGoBack,
   onProceedToOrder,
   onOpenFeedback,
+  onOpenCalendar,
 }) => {
   const [searchMenu, setSearchMenu] = useState('');
   const [likedItems, setLikedItems] = useState<Record<string, boolean>>({});
@@ -57,54 +61,88 @@ export const FoodListScreen: React.FC<FoodListScreenProps> = ({
 
   return (
     <div className="relative flex-1 flex flex-col h-full bg-slate-50 text-slate-900 select-none overflow-hidden">
-      <StatusBar theme="dark" />
+      {/* Top Header with white background covering StatusBar */}
+      <header className="sticky top-0 z-30 bg-white border-b border-slate-100 shadow-2xs">
+        <StatusBar theme="dark" />
+        <div className="px-5 pt-1 pb-3 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onGoBack}
+            className="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            aria-label="Kembali"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
 
-      {/* Top Header */}
-      <div className="px-5 py-3 bg-white border-b border-slate-100 flex items-center justify-between shadow-2xs">
-        <button
-          type="button"
-          onClick={onGoBack}
-          className="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-          aria-label="Kembali"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+          <div className="flex flex-col items-center">
+            <div className="flex items-center gap-1.5">
+              {vendor.id === 'kedai-selan' && (
+                <img
+                  src={VENDOR_PROFILE.avatarUrl}
+                  alt="Kedai Selan"
+                  className="w-5 h-5 rounded-full object-cover border border-amber-300 shadow-2xs shrink-0"
+                />
+              )}
+              <h1 className="text-base font-extrabold text-slate-900 tracking-tight leading-tight">
+                {vendor.name}
+              </h1>
+            </div>
+            {vendor.id !== 'kedai-selan' && (
+              <span className="text-[11px] text-[#387CB7] font-semibold">
+                {vendor.category}
+              </span>
+            )}
+          </div>
 
-        <div className="text-center">
-          <h1 className="text-base font-extrabold text-slate-900 tracking-tight leading-tight">
-            {vendor.name}
-          </h1>
-          <span className="text-[11px] text-[#387CB7] font-semibold">
-            {vendor.category}
-          </span>
+          <div className="w-10" />
         </div>
-
-        <button
-          type="button"
-          onClick={onOpenFeedback}
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-amber-50 text-amber-800 text-[11px] font-bold hover:bg-amber-100 transition-colors cursor-pointer border border-amber-200/60"
-          title="Lihat Feedback Vendor"
-        >
-          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-          <span>Feedback</span>
-        </button>
-      </div>
+      </header>
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 pb-28">
-        {/* Vendor Mini Banner info */}
-        <div className="bg-white rounded-2xl p-3 border border-slate-200/70 shadow-xs flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-slate-600">
-            <MapPin className="w-3.5 h-3.5 text-[#F38B21]" />
-            <span>{vendor.location}</span>
-          </div>
+        {/* 2 Action Cards below header: Jadwal Operasional & Rating/Feedback */}
+        <div className="grid grid-cols-2 gap-2.5">
+          {/* Card 1: Jadwal Operasional */}
+          <button
+            type="button"
+            onClick={onOpenCalendar}
+            className="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-[#135381]/40 hover:bg-blue-50/20 transition-all text-left flex items-center gap-2.5 cursor-pointer group"
+          >
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#135381] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <CalendarIcon className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#135381] transition-colors leading-tight">
+                Jadwal Buka
+              </h4>
+              <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                Kalendar operasional
+              </p>
+            </div>
+          </button>
+
+          {/* Card 2: Rating & Feedback */}
           <button
             type="button"
             onClick={onOpenFeedback}
-            className="text-xs text-[#387CB7] font-bold hover:underline flex items-center gap-1 cursor-pointer"
+            className="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-amber-300 hover:bg-amber-50/20 transition-all text-left flex items-center gap-2.5 cursor-pointer group"
           >
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span>Lihat feedback ({vendor.reviewCount})</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-slate-900 group-hover:text-amber-700 transition-colors leading-tight">
+                  Feedback
+                </h4>
+                <span className="text-[10px] font-extrabold text-amber-700 bg-amber-500/10 px-1.5 py-0.5 rounded-md border border-amber-500/20 tabular-nums">
+                  {vendor.rating}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                {vendor.reviewCount || 342} ulasan
+              </p>
+            </div>
           </button>
         </div>
 
@@ -183,8 +221,8 @@ export const FoodListScreen: React.FC<FoodListScreenProps> = ({
                           likedItems[bestSeller.id] ? 'fill-current text-red-500' : ''
                         }`}
                       />
-                      <span>
-                        disukai oleh {bestSeller.likes + (likedItems[bestSeller.id] ? 1 : 0)}
+                      <span className="font-semibold tabular-nums">
+                        {(bestSeller.likes ?? 120) + (likedItems[bestSeller.id] ? 1 : 0)}
                       </span>
                     </button>
 
@@ -207,7 +245,7 @@ export const FoodListScreen: React.FC<FoodListScreenProps> = ({
                             onClick={() => onUpdateCart(bestSeller, 1)}
                             className="w-6 h-6 rounded-full bg-[#F38B21] text-white flex items-center justify-center font-bold text-xs shadow-xs hover:bg-[#e07d1a] transition-colors cursor-pointer"
                           >
-                            <Plus className="w-3 h-3" />
+                            <Plus className="w-3.5 h-3.5" />
                           </button>
                         </>
                       ) : (
@@ -266,8 +304,8 @@ export const FoodListScreen: React.FC<FoodListScreenProps> = ({
                         isLiked ? 'text-red-500 font-bold' : 'text-slate-400'
                       }`}
                     >
-                      <Heart className={`w-3 h-3 ${isLiked ? 'fill-current' : ''}`} />
-                      <span>disukai oleh {item.likes + (isLiked ? 1 : 0)}</span>
+                      <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current' : ''}`} />
+                      <span>disukai oleh {(item.likes || 45) + (isLiked ? 1 : 0)}</span>
                     </button>
                   </div>
 
@@ -290,7 +328,7 @@ export const FoodListScreen: React.FC<FoodListScreenProps> = ({
                           onClick={() => onUpdateCart(item, 1)}
                           className="w-6 h-6 rounded-full bg-[#F38B21] text-white flex items-center justify-center font-bold text-xs shadow-xs hover:bg-[#e07d1a] transition-colors cursor-pointer"
                         >
-                          <Plus className="w-3 h-3" />
+                          <Plus className="w-3.5 h-3.5" />
                         </button>
                       </>
                     ) : (

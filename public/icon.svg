@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 460" width="560" height="460" fill="none">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&amp;family=Montserrat:wght@800;900&amp;display=swap');
+      .brand-tagline {
+        font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+        font-weight: 800;
+        font-size: 21px;
+        letter-spacing: 2.8px;
+        fill: #262527;
+      }
+    </style>
+  </defs>
+
+  <!-- ==================== 1. MASCOT (TOP DELIVERY TOTE BAG) ==================== -->
+  <g transform="translate(290, 142)">
+    <!-- Speed Lines on Left (Cornflower Blue #4378BA) -->
+    <g transform="translate(-142, -18) rotate(-14)">
+      <rect x="0" y="0" width="62" height="17" rx="8.5" fill="#4378BA"/>
+      <rect x="14" y="27" width="50" height="17" rx="8.5" fill="#4378BA"/>
+    </g>
+
+    <!-- Energy Burst Rays on Upper Right (Warm Orange #E88931) -->
+    <g transform="translate(86, -82)">
+      <!-- Top Ray (~46 deg) -->
+      <rect x="0" y="0" width="34" height="14" rx="7" transform="rotate(-42)" fill="#E88931"/>
+      <!-- Middle Ray (~18 deg) -->
+      <rect x="14" y="24" width="38" height="14" rx="7" transform="rotate(-18)" fill="#E88931"/>
+      <!-- Bottom Ray (~-4 deg) -->
+      <rect x="10" y="54" width="34" height="14" rx="7" transform="rotate(6)" fill="#E88931"/>
+    </g>
+
+    <!-- Tilted Bag Character (~8 degrees clockwise) -->
+    <g transform="rotate(8)">
+      <!-- Bag Top Handle -->
+      <path d="M -30 -64 L -30 -86 C -30 -98 -18 -108 0 -108 C 18 -108 30 -98 30 -86 L 30 -64"
+            fill="none" stroke="#262527" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+
+      <!-- Bag Body (Charcoal #262527) -->
+      <path d="M -54 -32 L 54 -32 C 60 -32 64 -27 63 -21 L 52 56 C 50 64 43 70 35 70 L -35 70 C -43 70 -50 64 -52 56 L -63 -21 C -64 -27 -60 -32 -54 -32 Z"
+            fill="#262527"/>
+
+      <!-- Open Orange Flap / Top (#E88931) -->
+      <path d="M -50 -72 C -50 -82 -40 -90 -28 -90 L 28 -90 C 40 -90 50 -82 50 -72 L 54 -34 L -54 -34 Z"
+            fill="#E88931"/>
+
+      <!-- White Divider Rim between Flap & Body -->
+      <rect x="-54" y="-35" width="108" height="7" rx="3.5" fill="#FFFFFF"/>
+
+      <!-- Happy Smile :) (Thick white arc) -->
+      <path d="M -22 10 C -22 30 22 30 22 10"
+            fill="none" stroke="#FFFFFF" stroke-width="13" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- ==================== 2. 'BinGo!' WORDMARK ==================== -->
+  <g transform="translate(112, 345)">
+    <!-- Letter 'B' (Charcoal, tilted left ~5 deg) -->
+    <g transform="translate(0, 0) rotate(-5)">
+      <path d="M 0 -68 C 0 -76 6 -82 14 -82 L 40 -82 C 57 -82 68 -72 68 -57 C 68 -48 62 -41 54 -37 C 65 -33 73 -23 73 -7 C 73 11 60 20 40 20 L 14 20 C 6 20 0 14 0 6 Z M 25 -52 L 25 -64 L 38 -64 C 44 -64 47 -61 47 -58 C 47 -55 44 -52 38 -52 Z M 25 3 L 39 3 C 45 3 49 -1 49 -6 C 49 -11 45 -14 39 -14 L 25 -14 Z"
+            fill="#262527"/>
+    </g>
+
+    <!-- Letter 'i' (Charcoal stem + Vibrant Orange Dot) -->
+    <g transform="translate(80, 0)">
+      <!-- Orange Dot -->
+      <circle cx="13" cy="-66" r="14" fill="#E88931"/>
+      <!-- Charcoal Stem -->
+      <rect x="2" y="-38" width="22" height="58" rx="11" fill="#262527"/>
+    </g>
+
+    <!-- Letter 'n' (Charcoal rounded) -->
+    <g transform="translate(122, 0)">
+      <path d="M 2 -30 C 2 -35 6 -39 12 -39 C 17 -39 21 -35 22 -30 L 22 -19 C 27 -32 39 -40 54 -40 C 70 -40 78 -29 78 -12 L 78 10 C 78 15 74 19 69 19 C 64 19 60 15 60 10 L 60 -11 C 60 -21 55 -25 45 -25 C 35 -25 27 -19 22 -10 L 22 10 C 22 15 18 19 13 19 C 7 19 2 15 2 10 Z"
+            fill="#262527"/>
+    </g>
+
+    <!-- Letter 'G' (Warm Orange #E88931) -->
+    <g transform="translate(210, 0)">
+      <path d="M 68 -72 C 60 -80 48 -85 35 -85 C 12 -85 -6 -65 -6 -35 C -6 -3 12 17 36 17 C 58 17 73 5 76 -14 C 77 -19 73 -22 68 -22 L 40 -22 C 35 -22 31 -18 31 -13 C 31 -8 35 -4 40 -4 L 56 -4 C 53 2 46 4 36 4 C 21 4 11 -8 11 -34 C 11 -58 21 -70 36 -70 C 44 -70 51 -67 56 -62 C 60 -58 66 -58 70 -62 C 73 -65 72 -69 68 -72 Z"
+            fill="#E88931"/>
+    </g>
+
+    <!-- Letter 'o' (Blue Circle with White Fork + 3 Blue Speed Stripes) -->
+    <g transform="translate(296, -17)">
+      <!-- Solid Blue Circle (#4378BA) -->
+      <circle cx="39" cy="0" r="39" fill="#4378BA"/>
+
+      <!-- White Fork Silhouette (Angled ~42 deg up-right) -->
+      <g transform="translate(39, 0) rotate(42)">
+        <!-- Fork Handle -->
+        <path d="M -3 34 C -3 36 3 36 3 34 L 2.5 6 C 3.5 5 5 4 6.5 1.5 L 6.5 -13 C 6.5 -14.5 5 -15 4 -15 C 3.2 -15 2.5 -14.2 2.5 -13 L 2.5 -2 C 2.5 -1 1.8 0 1 0 C 0.2 0 -0.5 -1 -0.5 -2 L -0.5 -13 C -0.5 -14.2 -1.2 -15 -2 -15 C -2.8 -15 -3.5 -14.2 -3.5 -13 L -3.5 1.5 C -2 4 -0.5 5 0.5 6 Z"
+              fill="#FFFFFF" transform="scale(1.25) translate(0, 3)"/>
+      </g>
+
+      <!-- 3 Blue Speed Stripes on right -->
+      <g transform="translate(82, -18)">
+        <rect x="0" y="0" width="28" height="10" rx="5" fill="#4378BA"/>
+        <rect x="0" y="13" width="28" height="10" rx="5" fill="#4378BA"/>
+        <rect x="0" y="26" width="18" height="10" rx="5" fill="#4378BA"/>
+      </g>
+    </g>
+
+    <!-- Exclamation Mark '!' (Charcoal, tilted right ~4 deg) -->
+    <g transform="translate(424, 0) rotate(4)">
+      <!-- Upper Wedge -->
+      <path d="M 0 -80 C -1 -85 4 -88 10 -88 L 18 -88 C 24 -88 29 -85 28 -80 L 21 -22 C 20 -17 16 -14 11 -14 C 6 -14 2 -17 1 -22 Z"
+            fill="#262527"/>
+      <!-- Lower Dot -->
+      <circle cx="11" cy="9" r="11" fill="#262527"/>
+    </g>
+  </g>
+
+  <!-- ==================== 3. TAGLINE ==================== -->
+  <text x="280" y="394" text-anchor="middle" class="brand-tagline">BINUS Grab &amp; Order</text>
+</svg>
