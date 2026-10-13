@@ -29,13 +29,13 @@ export const ActionCards: React.FC<ActionCardsProps> = ({
         </div>
 
         <div className="relative z-10 flex items-center justify-between">
-          <div className="space-y-1 pr-4">
+          <div className="flex-1 min-w-0 space-y-1 pr-3">
             <div className="flex items-center gap-2">
               <h3 className="text-2xl font-black tracking-tight text-white drop-shadow-xs">
                 Pesanan
               </h3>
               {pendingOrdersCount > 0 && (
-                <span className="bg-white text-orange-600 text-[11px] font-black px-2 py-0.5 rounded-full shadow-xs">
+                <span className="bg-white text-orange-600 text-xs font-black px-2.5 py-0.5 rounded-full shadow-xs shrink-0">
                   {pendingOrdersCount} Baru
                 </span>
               )}
@@ -45,9 +45,9 @@ export const ActionCards: React.FC<ActionCardsProps> = ({
             </p>
           </div>
 
-          {/* Double Chevrons (Identical to mockup) */}
-          <div className="shrink-0 p-2.5 rounded-full bg-white/20 backdrop-blur-xs text-white group-hover:translate-x-1 transition-transform">
-            <ChevronsRight className="w-8 h-8 stroke-[2.5]" />
+          {/* Double Chevrons Next Button */}
+          <div className="shrink-0 w-11 h-11 rounded-full bg-white/20 backdrop-blur-xs text-white flex items-center justify-center mr-2.5 sm:mr-3 group-hover:translate-x-0.5 transition-transform shadow-2xs">
+            <ChevronsRight className="w-6 h-6 stroke-[2.5]" />
           </div>
         </div>
       </button>
@@ -63,13 +63,13 @@ export const ActionCards: React.FC<ActionCardsProps> = ({
         </div>
 
         <div className="relative z-10 flex items-center justify-between">
-          <div className="space-y-1 pr-4">
-            <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0 space-y-1 pr-3">
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
               <h3 className="text-2xl font-black tracking-tight text-white drop-shadow-xs">
                 Calendar
               </h3>
               {upcomingEventTitle && (
-                <span className="bg-blue-400/30 border border-blue-300/30 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full truncate max-w-[150px]">
+                <span className="bg-blue-400/30 border border-blue-300/30 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full truncate max-w-[150px]">
                   {upcomingEventTitle}
                 </span>
               )}
@@ -79,9 +79,9 @@ export const ActionCards: React.FC<ActionCardsProps> = ({
             </p>
           </div>
 
-          {/* Double Chevrons (Identical to mockup) */}
-          <div className="shrink-0 p-2.5 rounded-full bg-white/20 backdrop-blur-xs text-white group-hover:translate-x-1 transition-transform">
-            <ChevronsRight className="w-8 h-8 stroke-[2.5]" />
+          {/* Double Chevrons Next Button (Properly inset from the right edge) */}
+          <div className="shrink-0 w-11 h-11 rounded-full bg-white/20 backdrop-blur-xs text-white flex items-center justify-center mr-2.5 sm:mr-3 group-hover:translate-x-0.5 transition-transform shadow-2xs">
+            <ChevronsRight className="w-6 h-6 stroke-[2.5]" />
           </div>
         </div>
       </button>

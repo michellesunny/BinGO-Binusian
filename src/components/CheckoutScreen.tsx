@@ -149,25 +149,35 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
 
       {/* Scrollable Form Body */}
       <div className="flex-1 overflow-y-auto min-h-0 px-5 py-4 space-y-4 pb-28">
-        {/* Pilih Slot Waktu Pengambilan (Matches Wireframe in image.png) */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-slate-700" />
-            <span>Pilih Slot Waktu Pengambilan</span>
-          </label>
+        {/* Pilih Slot Waktu Pengambilan */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs space-y-2">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-slate-600 shrink-0" />
+            <h3 className="text-sm font-bold text-slate-900">
+              Pilih Slot Waktu Pengambilan
+            </h3>
+          </div>
 
           <div className="relative">
             <button
               type="button"
               onClick={() => setShowSlotDropdown(!showSlotDropdown)}
-              className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between text-xs font-medium text-slate-700 hover:border-slate-400 transition-all cursor-pointer shadow-2xs"
+              className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 focus:ring-1 focus:ring-slate-300 flex items-center justify-between transition-all cursor-pointer shadow-2xs"
             >
-              <span className="text-slate-500">{selectedSlot || 'Pilih rentang waktu ambil pesanan'}</span>
-              <div className="w-5 h-2.5 rounded-full bg-slate-300" />
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-slate-700">
+                  {selectedSlot || 'Pilih rentang waktu ambil pesanan'}
+                </span>
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-slate-400 transition-transform ${
+                  showSlotDropdown ? 'rotate-180' : ''
+                }`}
+              />
             </button>
 
             {showSlotDropdown && (
-              <div className="absolute top-12 left-0 right-0 max-h-48 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 z-40 py-1 divide-y divide-slate-100">
+              <div className="absolute top-12 left-0 right-0 max-h-52 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 z-40 py-1 divide-y divide-slate-100 animate-in fade-in duration-100">
                 {TIME_SLOTS.map((slot) => (
                   <button
                     key={slot}
@@ -176,8 +186,10 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
                       setSelectedSlot(slot);
                       setShowSlotDropdown(false);
                     }}
-                    className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-orange-50 transition-colors flex items-center justify-between cursor-pointer ${
-                      selectedSlot === slot ? 'text-[#F38B21] font-bold bg-orange-50/50' : 'text-slate-700'
+                    className={`w-full px-3.5 py-2 text-left text-xs font-medium hover:bg-orange-50 transition-colors flex items-center justify-between cursor-pointer ${
+                      selectedSlot === slot
+                        ? 'text-[#F38B21] font-semibold bg-orange-50/70'
+                        : 'text-slate-700'
                     }`}
                   >
                     <span>{slot}</span>
@@ -189,11 +201,12 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
           </div>
         </div>
 
-        {/* Feature: BUDDY FEATURE (Matches image.png) */}
-        <div className="space-y-3 pt-1">
+        {/* Feature: BUDDY FEATURE */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs space-y-3 pt-3.5">
           {/* Header & Toggle */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-blue-600 shrink-0" />
               <h3 className="text-sm font-bold text-slate-900">
                 Aktifkan fitur Buddy
               </h3>

@@ -143,15 +143,30 @@ export interface GeneralOperationalInfo {
   specialNote?: string;
 }
 
+export interface VendorUser {
+  id: string;
+  ownerName: string;
+  stallName: string;
+  stallNumber: string;
+  phone: string;
+  email: string;
+  category: string;
+  openTime: string;
+  closeTime: string;
+  avatarUrl?: string;
+}
+
 export type ActiveScreen = 
   | 'vendor_home' 
   | 'pesanan' 
   | 'calendar' 
   | 'menu_stock' 
   | 'edit_menu_item'
+  | 'add_menu_item'
+  | 'vendor_auth'
   | 'add_event'
   | 'student_menu'
   | 'student_my_orders';
 
-export type ViewMode = 'vendor' | 'student';
+export type ViewMode = 'vendor' | 'student' | 'owner_dashboard';
 export type DevicePreviewMode = 'mobile' | 'responsive';

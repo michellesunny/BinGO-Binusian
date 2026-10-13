@@ -312,9 +312,9 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
 ];
 
 export const GENERAL_OPERATIONAL_INFO: GeneralOperationalInfo = {
-  weekdays: 'Senin–Jumat pukul 09.00–17.00',
-  saturday: 'Sabtu pukul 09.00–15.00',
-  sunday: 'Minggu: Tutup',
+  weekdays: '07.00 – 15.30 WIB',
+  saturday: '07.00 – 13.00 WIB',
+  sunday: 'Tutup (Libur Akhir Pekan)',
 };
 
 export const WEEKLY_STATS = {

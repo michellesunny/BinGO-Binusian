@@ -1,5 +1,5 @@
 import React from 'react';
-import { Smartphone, Monitor, UserCheck, UtensilsCrossed, BellRing } from 'lucide-react';
+import { Smartphone, Monitor, UserCheck, UtensilsCrossed, BellRing, LayoutDashboard } from 'lucide-react';
 import { ViewMode, DevicePreviewMode } from '../types';
 import { BingoLogo } from './BingoLogo';
 
@@ -22,9 +22,32 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({
   onSimulateOrder,
   pendingCount,
 }) => {
+  // When viewing Desktop Owner Dashboard, render clean full-screen desktop view without phone mode switcher in header
+  if (viewMode === 'owner_dashboard') {
+    return (
+      <div className="w-full min-h-screen bg-slate-100 flex flex-col font-sans antialiased text-slate-800 selection:bg-amber-400 selection:text-slate-950">
+        <div className="w-full flex-1 flex flex-col min-h-0">
+          {children}
+        </div>
+        {/* Subtle, unobtrusive floating toggle in bottom corner for dev/preview testing */}
+        <div className="fixed bottom-3 right-3 z-50 flex items-center gap-1.5 opacity-30 hover:opacity-100 transition-opacity">
+          <button
+            type="button"
+            onClick={() => onToggleViewMode('vendor')}
+            className="px-2.5 py-1 rounded-full bg-slate-900/90 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-semibold shadow-lg backdrop-blur-xs flex items-center gap-1 cursor-pointer"
+            title="Buka Pratinjau Tampilan HP"
+          >
+            <Smartphone className="w-3 h-3 text-amber-400" />
+            <span>Mode HP</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-900/95 flex flex-col items-center justify-start text-slate-100 antialiased selection:bg-amber-400 selection:text-slate-950">
-      {/* Top Universal Control Bar */}
+      {/* Top Universal Control Bar for Mobile Preview */}
       <nav className="w-full bg-slate-950/80 backdrop-blur-md border-b border-slate-800 px-4 py-2.5 sticky top-0 z-50 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <BingoLogo size="sm" variant="dark" />
@@ -58,6 +81,13 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({
               <UserCheck className="w-3.5 h-3.5" />
               <span>Siswa (Pesan Makanan)</span>
             </button>
+            <button
+              onClick={() => onToggleViewMode('owner_dashboard')}
+              className="px-2.5 py-1 rounded-md font-semibold flex items-center gap-1.5 transition-all cursor-pointer text-slate-400 hover:text-slate-200"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5 text-amber-300" />
+              <span>Owner Dashboard (Desktop)</span>
+            </button>
           </div>
         </div>
 
@@ -67,7 +97,7 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({
           <button
             onClick={onSimulateOrder}
             className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
-            title="Kirim simulasi pesanan baru ke dapur"
+            title="Kirim simulasi pesanan baru ke dapur & database Firestore"
           >
             <BellRing className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
             <span className="hidden sm:inline">+ Simulasi Order</span>
@@ -101,7 +131,7 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({
         </div>
       </nav>
 
-      {/* Frame Container */}
+      {/* Frame Container for Mobile */}
       <div className="w-full flex-1 flex items-start justify-center p-0 sm:p-4 md:p-6 transition-all">
         {devicePreview === 'mobile' ? (
           /* Realistic Smartphone Bezel Container (Matches Wireframes) */

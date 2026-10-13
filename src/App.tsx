@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ActiveScreen,
   DevicePreviewMode,
@@ -8,6 +8,7 @@ import {
   Order,
   OrderStatus,
   ViewMode,
+  VendorUser,
 } from './types';
 import {
   GENERAL_OPERATIONAL_INFO,
@@ -15,6 +16,15 @@ import {
   INITIAL_OPERATIONAL_EVENTS,
   INITIAL_ORDERS,
 } from './data/mockData';
+import {
+  seedInitialDataIfEmpty,
+  subscribeToOrders,
+  subscribeToMenuItems,
+  createOrderInFirebase,
+  updateOrderStatusInFirebase,
+  saveMenuItemInFirebase,
+  saveOperationalEventInFirebase,
+} from './services/firebaseService';
 import { VendorHeader } from './components/VendorHeader';
 import { WeeklyInsights } from './components/WeeklyInsights';
 import { ActionCards } from './components/ActionCards';
@@ -23,11 +33,14 @@ import { CalendarView } from './components/CalendarView';
 import { AddEventModal } from './components/AddEventModal';
 import { MenuStockView } from './components/MenuStockView';
 import { MenuDetailEditView } from './components/MenuDetailEditView';
+import { AddMenuView } from './components/AddMenuView';
+import { VendorAuthView, PRESET_DEFAULT_VENDOR } from './components/VendorAuthView';
 import { StudentOrderView } from './components/StudentOrderView';
+import { OwnerDashboardView } from './components/OwnerDashboardView';
 import { DeviceFrame } from './components/DeviceFrame';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { playNotificationChime } from './utils/audio';
-import { Utensils, ChevronRight, Clock, Package } from 'lucide-react';
+import { Utensils, ChevronRight, Clock, Package, Plus } from 'lucide-react';
 
 export default function App() {
   // Application Data States
@@ -37,12 +50,57 @@ export default function App() {
   const [generalInfo, setGeneralInfo] = useState<GeneralOperationalInfo>(GENERAL_OPERATIONAL_INFO);
   const [isCanteenOpen, setIsCanteenOpen] = useState<boolean>(true);
 
+  // Vendor User & Auth State
+  const [vendorUser, setVendorUser] = useState<VendorUser | null>(PRESET_DEFAULT_VENDOR);
+  const [isVendorLoggedIn, setIsVendorLoggedIn] = useState<boolean>(true);
+
   // Navigation & View States
   const [activeScreen, setActiveScreen] = useState<ActiveScreen>('vendor_home');
   const [selectedEditingItemId, setSelectedEditingItemId] = useState<string>('menu-soto');
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>('2027-01-23');
   const [viewMode, setViewMode] = useState<ViewMode>('vendor');
   const [devicePreview, setDevicePreview] = useState<DevicePreviewMode>('mobile');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Sync with Cloud Firestore on mount
+  useEffect(() => {
+    // Seed initial collections if first time running on new database
+    seedInitialDataIfEmpty();
+
+    let initialLoadDone = false;
+
+    // Subscribe to live orders
+    const unsubscribe = subscribeToOrders((liveOrders) => {
+      if (liveOrders && liveOrders.length > 0) {
+        setOrders((prev) => {
+          if (initialLoadDone && prev.length > 0) {
+            // Find newly arrived orders
+            const prevIds = new Set(prev.map((o) => o.id));
+            const newOrders = liveOrders.filter((o) => !prevIds.has(o.id));
+            if (newOrders.length > 0) {
+              const latest = newOrders[0];
+              playNotificationChime('new_order');
+              showToast(`🔔 Pesanan Baru Masuk! Struk ${latest.receiptNo || ''} dari ${latest.customerName}`);
+            }
+          }
+          initialLoadDone = true;
+          return liveOrders;
+        });
+      }
+    });
+
+    // Subscribe to live menu items
+    const unsubMenu = subscribeToMenuItems((liveItems) => {
+      if (liveItems && liveItems.length > 0) {
+        setMenuItems(liveItems);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      unsubMenu();
+    };
+  }, []);
 
   // Helper Toast
   const showToast = (msg: string) => {
@@ -52,11 +110,28 @@ export default function App() {
     }, 3500);
   };
 
+  // Vendor Authentication Handlers
+  const handleVendorLogout = () => {
+    setIsVendorLoggedIn(false);
+    showToast('Berhasil keluar dari akun vendor.');
+  };
+
+  const handleVendorLoginSuccess = (user: VendorUser) => {
+    setVendorUser(user);
+    setIsVendorLoggedIn(true);
+    setActiveScreen('vendor_home');
+    showToast(`Selamat datang, ${user.stallName}!`);
+  };
+
   // Order Status Updates
   const handleUpdateOrderStatus = (orderId: string, newStatus: OrderStatus) => {
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
     );
+    // Push update to Firebase Firestore
+    updateOrderStatusInFirebase(orderId, newStatus).catch((err) => {
+      console.warn('[Firebase] Error updating status in Firestore:', err);
+    });
   };
 
   // Simulate an incoming student order
@@ -94,6 +169,10 @@ export default function App() {
     };
 
     setOrders((prev) => [simulatedOrder, ...prev]);
+    // Save to Firestore
+    createOrderInFirebase(simulatedOrder).catch((err) => {
+      console.warn('[Firebase] Error creating order in Firestore:', err);
+    });
     playNotificationChime('new_order');
     showToast(`🔔 Pesanan Baru Masuk! Struk ${simulatedOrder.receiptNo} dari ${simulatedOrder.customerName}`);
   };
@@ -112,7 +191,13 @@ export default function App() {
     };
 
     setOrders((prev) => [newOrder, ...prev]);
-    showToast(`✅ Pesanan Struk ${newOrder.receiptNo} berhasil dibuat!`);
+    playNotificationChime('new_order');
+    showToast(`🔔 Pesanan Baru Masuk! Struk ${newOrder.receiptNo} dari ${newOrder.customerName}`);
+
+    // Save to Firestore
+    createOrderInFirebase(newOrder).catch((err) => {
+      console.warn('[Firebase] Error creating order in Firestore:', err);
+    });
   };
 
   // Calendar Event Add
@@ -122,6 +207,9 @@ export default function App() {
       id: `evt-${Date.now()}`,
     };
     setEvents((prev) => [...prev, eventItem]);
+    saveOperationalEventInFirebase(eventItem).catch((err) => {
+      console.warn('[Firebase] Error saving event to Firestore:', err);
+    });
     showToast(`📅 Agenda "${eventItem.title}" berhasil ditambahkan ke kalendar!`);
     setActiveScreen('calendar');
   };
@@ -166,7 +254,25 @@ export default function App() {
 
   // Render Vendor Screen Router
   const renderVendorScreen = () => {
+    // If vendor is logged out, show the Vendor Auth Screen (Login / Sign Up)
+    if (!isVendorLoggedIn) {
+      return (
+        <VendorAuthView
+          onSuccess={handleVendorLoginSuccess}
+          onSwitchToStudent={() => setViewMode('student')}
+        />
+      );
+    }
+
     switch (activeScreen) {
+      case 'vendor_auth':
+        return (
+          <VendorAuthView
+            onSuccess={handleVendorLoginSuccess}
+            onSwitchToStudent={() => setViewMode('student')}
+          />
+        );
+
       case 'pesanan':
         return (
           <OrdersView
@@ -183,7 +289,10 @@ export default function App() {
             events={events}
             generalInfo={generalInfo}
             onBack={() => setActiveScreen('vendor_home')}
-            onOpenAddEvent={() => setActiveScreen('add_event')}
+            onOpenAddEvent={(dateStr) => {
+              if (dateStr) setSelectedCalendarDate(dateStr);
+              setActiveScreen('add_event');
+            }}
             onDeleteEvent={handleDeleteCalendarEvent}
             onUpdateGeneralInfo={(info) => {
               setGeneralInfo(info);
@@ -195,6 +304,7 @@ export default function App() {
       case 'add_event':
         return (
           <AddEventModal
+            defaultDate={selectedCalendarDate}
             onBack={() => setActiveScreen('calendar')}
             onAddEvent={handleAddCalendarEvent}
           />
@@ -207,11 +317,28 @@ export default function App() {
             onBack={() => setActiveScreen('vendor_home')}
             onToggleAvailability={handleToggleMenuAvailability}
             onSelectItem={handleOpenEditMenu}
+            onOpenAddMenu={() => setActiveScreen('add_menu_item')}
             onUpdateItem={(updated) =>
               setMenuItems((prev) =>
                 prev.map((i) => (i.id === updated.id ? updated : i))
               )
             }
+          />
+        );
+
+      case 'add_menu_item':
+        return (
+          <AddMenuView
+            onBack={() => setActiveScreen('menu_stock')}
+            onSave={(newItem) => {
+              setMenuItems((prev) => [newItem, ...prev]);
+              saveMenuItemInFirebase(newItem).catch((err) => {
+                console.warn('[Firebase] Error saving menu item to Firestore:', err);
+              });
+              playNotificationChime('ready');
+              showToast(`✅ Menu "${newItem.name}" berhasil ditambahkan & terbit!`);
+              setActiveScreen('menu_stock');
+            }}
           />
         );
 
@@ -226,6 +353,9 @@ export default function App() {
               setMenuItems((prev) =>
                 prev.map((i) => (i.id === updated.id ? updated : i))
               );
+              saveMenuItemInFirebase(updated).catch((err) => {
+                console.warn('[Firebase] Error saving updated menu to Firestore:', err);
+              });
               playNotificationChime('ready');
               showToast(`✅ Stok & estimasi waktu masak "${updated.name}" berhasil disimpan!`);
               setActiveScreen('menu_stock');
@@ -238,7 +368,7 @@ export default function App() {
       default:
         return (
           <div className="w-full h-full flex-1 overflow-y-auto min-h-0 bg-slate-50 flex flex-col pb-10">
-            {/* Header: Cat avatar, Kedai Selan, BinGO! logo */}
+            {/* Header: Cat avatar, Stall Name, BinGO! logo, and Logout option */}
             <VendorHeader
               isOpen={isCanteenOpen}
               onToggleOpen={() => {
@@ -250,15 +380,19 @@ export default function App() {
                 );
               }}
               onSwitchMode={() => setViewMode('student')}
+              onOpenOwnerDashboard={() => setViewMode('owner_dashboard')}
               isStudentMode={false}
+              vendorUser={vendorUser}
+              onLogout={handleVendorLogout}
             />
 
             {/* Body matching Wireframe Phone 1 */}
             <div className="p-4 max-w-md mx-auto w-full space-y-4">
-              {/* Weekly Insights Card */}
+              {/* Weekly Insights Card (Revenue removed per user request) */}
               <WeeklyInsights
                 ordersCount={orders.length + 130}
-                totalRevenue={orders.reduce((s, o) => s + (o.totalAmount ?? o.total ?? 0), 3840000)}
+                popularProductName={menuItems.find((i) => i.isPopular)?.name || 'Nasi Selan Spesial'}
+                popularProductSoldCount={menuItems.find((i) => i.isPopular)?.soldCount || 142}
                 onPopularProductClick={() => {
                   const pop = menuItems.find((i) => i.isPopular) || menuItems[0];
                   handleOpenEditMenu(pop.id);
@@ -284,10 +418,11 @@ export default function App() {
                       <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
                         Kelola Menu
                       </h4>
-                      <p className="text-[11px] text-slate-500">Kelola hidangan & stok</p>
+                      <p className="text-xs text-slate-500">Kelola hidangan & stok</p>
                     </div>
                   </div>
                   <button
+                    type="button"
                     onClick={() => setActiveScreen('menu_stock')}
                     className="text-xs font-bold text-amber-600 hover:text-amber-700 hover:underline flex items-center gap-0.5 cursor-pointer bg-transparent py-1 transition-colors"
                   >
@@ -303,50 +438,52 @@ export default function App() {
                       <div
                         key={item.id}
                         onClick={() => handleOpenEditMenu(item.id)}
-                        className="p-3 rounded-xl border border-slate-100 hover:border-amber-300 hover:bg-amber-50/20 transition-all flex items-center justify-between gap-3 cursor-pointer group"
+                        className="p-3 rounded-xl border border-slate-100 hover:border-amber-300 hover:bg-amber-50/20 transition-all flex items-center gap-3.5 cursor-pointer group"
                       >
-                        <div className="flex items-start gap-3 min-w-0">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            referrerPolicy="no-referrer"
-                            className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0 group-hover:scale-105 transition-transform"
-                          />
-                          <div className="min-w-0">
-                            <h5 className="font-extrabold text-xs text-slate-900 group-hover:text-amber-600 transition-colors truncate">
-                              {item.name}
-                            </h5>
-                            {item.description && (
-                              <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                                {item.description}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-1">
-                              <span className="font-bold text-orange-600">
-                                {formatRupiah(item.price)}
-                              </span>
-                              <span>·</span>
-                              <span className="flex items-center gap-0.5 text-blue-600 font-semibold">
-                                <Clock className="w-3 h-3" />
-                                ~{item.preparationTimeMinutes} mnt
-                              </span>
-                            </div>
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          referrerPolicy="no-referrer"
+                          className="w-14 h-14 rounded-xl object-cover border border-slate-200 shrink-0 group-hover:scale-105 transition-transform"
+                        />
+
+                        <div className="flex-1 min-w-0">
+                          {/* Row 1: Judul */}
+                          <h5 className="font-extrabold text-sm text-slate-900 group-hover:text-amber-600 transition-colors truncate">
+                            {item.name}
+                          </h5>
+
+                          {/* Row 2: Desc */}
+                          {item.description && (
+                            <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
+                              {item.description}
+                            </p>
+                          )}
+
+                          {/* Row 3 (1 Clean Line): Harga · Lama Masak · Porsi/Stok */}
+                          <div className="flex items-center gap-2 text-xs mt-1.5 flex-wrap">
+                            <span className="font-extrabold text-orange-600">
+                              {formatRupiah(item.price)}
+                            </span>
+                            <span className="text-slate-300">·</span>
+                            <span className="flex items-center gap-1 text-slate-600 font-medium">
+                              <Clock className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                              <span>~{item.preparationTimeMinutes} mnt</span>
+                            </span>
+                            <span className="text-slate-300">·</span>
+                            <span
+                              className={`font-bold ${
+                                item.isAvailable && stock > 0
+                                  ? 'text-emerald-700'
+                                  : 'text-rose-600'
+                              }`}
+                            >
+                              {stock > 0 ? `${stock} stok` : 'Habis'}
+                            </span>
                           </div>
                         </div>
 
-                        <div className="shrink-0 flex items-center gap-2">
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                              item.isAvailable && stock > 0
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                : 'bg-rose-50 text-rose-700 border border-rose-200'
-                            }`}
-                          >
-                            <Package className="w-3 h-3" />
-                            <span>{stock > 0 ? `${stock} Porsi` : 'Habis'}</span>
-                          </span>
-                          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all" />
-                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all shrink-0" />
                       </div>
                     );
                   })}
@@ -374,8 +511,29 @@ export default function App() {
         </div>
       )}
 
-      {/* Main View Router */}
-      {viewMode === 'vendor' ? (
+      {/* Main View Router: Owner Dashboard (Desktop), Vendor (HP), or Student (HP) */}
+      {viewMode === 'owner_dashboard' ? (
+        <OwnerDashboardView
+          orders={orders}
+          menuItems={menuItems}
+          onSwitchMode={(mode) => setViewMode(mode)}
+          onSimulateOrder={handleSimulateNewOrder}
+          isLoggedIn={isVendorLoggedIn}
+          onLogin={handleVendorLoginSuccess}
+          onLogout={handleVendorLogout}
+          vendorUser={vendorUser}
+          onUpdateMenuItem={(updated) => {
+            setMenuItems((prev) =>
+              prev.map((i) => (i.id === updated.id ? updated : i))
+            );
+            saveMenuItemInFirebase(updated).catch((err) => {
+              console.warn('[Firebase] Error saving updated menu to Firestore:', err);
+            });
+            playNotificationChime('ready');
+            showToast(`✅ Menu "${updated.name}" berhasil diperbarui!`);
+          }}
+        />
+      ) : viewMode === 'vendor' ? (
         renderVendorScreen()
       ) : (
         <StudentOrderView

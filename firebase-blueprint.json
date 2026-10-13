@@ -1,0 +1,110 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile for students, buddies, and canteen vendors.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["pemesan", "buddy", "vendor", "admin"] },
+        "nim": { "type": "string" },
+        "campus": { "type": "string" },
+        "balance": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "role"]
+    },
+    "Vendor": {
+      "title": "Vendor",
+      "description": "Canteen stall/booth profile.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "rating": { "type": "number" },
+        "image": { "type": "string" },
+        "description": { "type": "string" },
+        "location": { "type": "string" },
+        "isOpen": { "type": "boolean" },
+        "ownerId": { "type": "string" }
+      },
+      "required": ["id", "name", "category", "isOpen"]
+    },
+    "MenuItem": {
+      "title": "MenuItem",
+      "description": "Food or beverage item offered by a vendor.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "vendorId": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "image": { "type": "string" },
+        "isAvailable": { "type": "boolean" },
+        "preparationTimeMinutes": { "type": "number" },
+        "stockRemaining": { "type": "number" }
+      },
+      "required": ["id", "name", "price", "isAvailable"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Food order placed by student or handled by canteen staff.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "receiptNo": { "type": "string" },
+        "customerName": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string" },
+        "pickupTime": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "paymentStatus": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "customerName", "status", "createdAt"]
+    },
+    "OperationalEvent": {
+      "title": "OperationalEvent",
+      "description": "Canteen calendar schedule or operational event.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "type": { "type": "string" },
+        "canteenStatus": { "type": "string" }
+      },
+      "required": ["id", "title", "startDate", "type"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User accounts and roles."
+    },
+    "/vendors/{vendorId}": {
+      "schema": "Vendor",
+      "description": "Vendor booths/stalls."
+    },
+    "/menu_items/{itemId}": {
+      "schema": "MenuItem",
+      "description": "All canteen food and beverage items."
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Customer food orders."
+    },
+    "/operational_events/{eventId}": {
+      "schema": "OperationalEvent",
+      "description": "Operational calendar and event schedules."
+    }
+  }
+}

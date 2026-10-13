@@ -6,25 +6,37 @@ export const playNotificationChime = (type: 'new_order' | 'success' | 'ready') =
     const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioContextClass) return;
     const ctx = new AudioContextClass();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    const now = ctx.currentTime;
 
     if (type === 'new_order') {
-      // Cheerful 2-tone doorbell chime for new order
+      // Cheerful 2-tone doorbell chime for new order (Ding-Dong!)
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();
       const gain = ctx.createGain();
 
       osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-      osc1.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
+      osc1.frequency.setValueAtTime(659.25, now); // E5
+      osc1.frequency.setValueAtTime(659.25, now + 0.15);
 
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(880, now + 0.18); // A5
+      osc2.frequency.setValueAtTime(1046.5, now + 0.4); // C6
+
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
 
       osc1.connect(gain);
+      osc2.connect(gain);
       gain.connect(ctx.destination);
 
-      osc1.start();
-      osc1.stop(ctx.currentTime + 0.6);
+      osc1.start(now);
+      osc1.stop(now + 0.25);
+      osc2.start(now + 0.18);
+      osc2.stop(now + 0.85);
     } else if (type === 'ready') {
       // Pleasant alert for ready order
       const osc = ctx.createOscillator();
