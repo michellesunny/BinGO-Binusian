@@ -1908,7 +1908,6 @@ export const OwnerDashboardView: React.FC<OwnerDashboardViewProps> = ({
 
                             <td className="py-4 px-4 sm:px-6">
                               <span className="font-bold text-slate-900 text-sm sm:text-base block">{item.customerName}</span>
-                              <span className="text-xs sm:text-sm text-slate-500">NIM: {item.nim}</span>
                               {item.isBuddy && (
                                 <span className="inline-block mt-1 text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
                                   Pesanan Kelompok

@@ -40,7 +40,7 @@ import { OwnerDashboardView } from './components/OwnerDashboardView';
 import { DeviceFrame } from './components/DeviceFrame';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { playNotificationChime } from './utils/audio';
-import { Utensils, ChevronRight, Clock, Package, Plus } from 'lucide-react';
+import { Utensils, ChevronRight, Clock, Package } from 'lucide-react';
 
 export default function App() {
   // Application Data States

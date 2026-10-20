@@ -13,7 +13,6 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
-  ChevronRight,
 } from 'lucide-react';
 import { StatusBar } from './StatusBar';
 import { BingoLogo } from './BingoLogo';
@@ -239,7 +238,7 @@ export const VendorAuthView: React.FC<VendorAuthViewProps> = ({
 
               <button
                 type="submit"
-                className="w-full py-3 px-4 rounded-xl bg-[#F38B21] hover:bg-[#e07b14] text-white font-extrabold text-xs shadow-md shadow-orange-500/20 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 mt-2"
+                className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 mt-2"
               >
                 <span>Masuk ke Dashboard Vendor</span>
                 <ArrowRight className="w-4 h-4" />
@@ -419,7 +418,7 @@ export const VendorAuthView: React.FC<VendorAuthViewProps> = ({
 
               <button
                 type="submit"
-                className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 mt-2"
+                className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 mt-2"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Daftarkan Kios & Masuk</span>
@@ -427,21 +426,6 @@ export const VendorAuthView: React.FC<VendorAuthViewProps> = ({
             </form>
           )}
         </div>
-
-        {/* Switch to Student Mode link */}
-        {onSwitchToStudent && (
-          <div className="text-center pt-2">
-            <button
-              type="button"
-              onClick={onSwitchToStudent}
-              className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors inline-flex items-center gap-1 cursor-pointer"
-            >
-              <span>Ingin memesan makanan sebagai siswa?</span>
-              <span className="text-orange-600 underline">Buka Mode Siswa</span>
-              <ChevronRight className="w-3 h-3 text-orange-600" />
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

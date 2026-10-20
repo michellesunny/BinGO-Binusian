@@ -18,6 +18,7 @@ import { StudentCalendarView } from './StudentCalendarView';
 import { FeedbackModal } from './FeedbackModal';
 import { BottomNavBar, NavTab } from './BottomNavBar';
 import { Toast, ToastMessage } from './Toast';
+import { PaymentQrisScreen } from './PaymentQrisScreen';
 
 interface StudentOrderViewProps {
   menuItems: MenuItem[];
@@ -40,11 +41,14 @@ export const StudentOrderView: React.FC<StudentOrderViewProps> = ({
 }) => {
   // Navigation Screens
   const [currentScreen, setCurrentScreen] = useState<
-    'splash' | 'auth' | 'home' | 'food_list' | 'checkout' | 'ongoing' | 'history' | 'ticket' | 'calendar'
+    'splash' | 'auth' | 'home' | 'food_list' | 'checkout' | 'payment_qris' | 'ongoing' | 'history' | 'ticket' | 'calendar'
   >('home');
   const [navTab, setNavTab] = useState<NavTab>('home');
   const [authInitialView, setAuthInitialView] = useState<'login' | 'signup'>('login');
   const [calendarSourceScreen, setCalendarSourceScreen] = useState<'home' | 'food_list'>('home');
+
+  // QRIS Payment State
+  const [pendingQrisOrder, setPendingQrisOrder] = useState<Order | null>(null);
 
   // Modals
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -112,9 +116,18 @@ export const StudentOrderView: React.FC<StudentOrderViewProps> = ({
     });
   };
 
-  // Handle Checkout Confirmation
+  // Handle Checkout Confirmation -> Route to QRIS Payment first
   const handleConfirmOrder = (newOrder: Order) => {
-    // Notify vendor side as well
+    setPendingQrisOrder(newOrder);
+    setCurrentScreen('payment_qris');
+  };
+
+  // Finalize order after QRIS payment is verified
+  const handleQrisPaymentSuccess = () => {
+    if (!pendingQrisOrder) return;
+    const newOrder = pendingQrisOrder;
+
+    // Notify vendor side as well with status Lunas via QRIS
     const vendorFormattedOrder = {
       id: newOrder.id,
       receiptNo: `#${100 + studentOrders.length + 1}`,
@@ -143,26 +156,27 @@ export const StudentOrderView: React.FC<StudentOrderViewProps> = ({
     setActiveOrder(newOrder);
     setTicketOrder(newOrder);
     setCart([]);
+    setPendingQrisOrder(null);
 
     playNotificationChime('ready');
     try {
       confetti({
-        particleCount: 60,
-        spread: 60,
+        particleCount: 75,
+        spread: 65,
         origin: { y: 0.6 },
-        colors: ['#F38B21', '#387CB7', '#10B981'],
+        colors: ['#10B981', '#F38B21', '#387CB7'],
       });
     } catch {
       // ignore
     }
 
-    showToast('🎉 Pesanan Berhasil Dibuat!', 'Vendor sedang menyiapkan pesananmu.');
+    showToast('✅ Pembayaran QRIS Berhasil!', 'Tiket pesanan Anda telah resmi diterbitkan.');
     setCurrentScreen('ticket');
     setNavTab('ongoing');
   };
 
   // Verification code check: user / buyer inputs the code shown on ticket / buddy
-  const handleVerifyCompletionCode = (enteredCode: string): boolean => {
+  const handleVerifyCompletionCode = (enteredCode: string, autoRedirect: boolean = true): boolean => {
     const target = activeOrder || ticketOrder;
     if (!target) return false;
 
@@ -204,13 +218,15 @@ export const StudentOrderView: React.FC<StudentOrderViewProps> = ({
         // ignore
       }
 
-      showToast('🎉 Pesanan Selesai!', 'Kode cocok & diverifikasi. Pesanan masuk ke Riwayat Selesai.');
+      showToast('🎉 Pesanan Selesai!', 'Kode cocok & diverifikasi. Silakan beri ulasan untuk Buddy.');
 
-      // Automatically move to history screen as requested
-      setTimeout(() => {
-        setCurrentScreen('history');
-        setNavTab('history');
-      }, 600);
+      if (autoRedirect) {
+        // Automatically move to history screen as requested
+        setTimeout(() => {
+          setCurrentScreen('history');
+          setNavTab('history');
+        }, 600);
+      }
 
       return true;
     }
@@ -340,6 +356,18 @@ export const StudentOrderView: React.FC<StudentOrderViewProps> = ({
             onGoBack={() => setCurrentScreen('food_list')}
             onConfirmOrder={handleConfirmOrder}
             incomingPeerRequests={incomingPeers}
+          />
+        );
+      }
+
+      case 'payment_qris': {
+        const targetOrder = pendingQrisOrder || activeOrder || studentOrders[0];
+        if (!targetOrder) return null;
+        return (
+          <PaymentQrisScreen
+            order={targetOrder}
+            onPaymentSuccess={handleQrisPaymentSuccess}
+            onCancel={() => setCurrentScreen('checkout')}
           />
         );
       }

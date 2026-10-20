@@ -243,13 +243,18 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
             </div>
 
             {/* Pemesan & Ambil row */}
-            <div className="flex items-baseline justify-between mb-1.5">
-              <div className="font-bold text-slate-900 text-sm">
+            <div className="flex items-start justify-between gap-2 mb-1.5">
+              <div className="font-bold text-slate-900 text-sm min-w-0 flex-1">
                 Pemesan: <span className="font-extrabold">{order.customerName}</span>
               </div>
-              <div className="text-xs font-semibold text-slate-700 flex items-center gap-1">
-                <Clock className="w-3 h-3 text-amber-600" />
-                <span>Ambil: {order.pickupTime}</span>
+              <div className="text-right shrink-0">
+                <div className="text-[11px] font-semibold text-slate-500 flex items-center justify-end gap-1">
+                  <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                  <span>Ambil:</span>
+                </div>
+                <div className="text-xs font-extrabold text-slate-900 tabular-nums whitespace-nowrap mt-0.5">
+                  {order.pickupTime}
+                </div>
               </div>
             </div>
 

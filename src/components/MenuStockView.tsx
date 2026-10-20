@@ -8,7 +8,6 @@ import {
   Clock,
   Package,
   ChevronRight,
-  Plus,
 } from 'lucide-react';
 import { MenuItem } from '../types';
 import { StatusBar } from './StatusBar';
@@ -19,7 +18,7 @@ interface MenuStockViewProps {
   onBack: () => void;
   onToggleAvailability: (itemId: string) => void;
   onSelectItem: (itemId: string) => void;
-  onOpenAddMenu: () => void;
+  onOpenAddMenu?: () => void;
   onUpdateItem?: (item: MenuItem) => void;
 }
 
@@ -28,7 +27,6 @@ export const MenuStockView: React.FC<MenuStockViewProps> = ({
   onBack,
   onToggleAvailability,
   onSelectItem,
-  onOpenAddMenu,
 }) => {
   const [search, setSearch] = useState('');
 
@@ -70,28 +68,16 @@ export const MenuStockView: React.FC<MenuStockViewProps> = ({
 
       {/* Main Container */}
       <div className="p-4 max-w-md mx-auto w-full space-y-3">
-        {/* Top Action Row: Search and Add Menu Button */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Cari hidangan atau minuman..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500 shadow-2xs"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={onOpenAddMenu}
-            className="shrink-0 py-2 px-3.5 rounded-xl bg-[#F38B21] hover:bg-[#e07b14] text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
-            title="Tambah menu hidangan baru"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Tambah</span>
-          </button>
+        {/* Search Bar */}
+        <div className="relative w-full">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Cari hidangan atau minuman..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500 shadow-2xs"
+          />
         </div>
 
         {/* Menu Items List */}
